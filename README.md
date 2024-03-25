@@ -1,6 +1,6 @@
-# Supabase Auth Example 
+# Clerk Auth Example 
 
-How do you integrate supabase auth with Instant? This repo gives you an example to do just that! 
+How do you integrate clerk auth with Instant? This repo gives you an example to do just that! 
 
 To run everything: 
 
