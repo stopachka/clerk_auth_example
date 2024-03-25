@@ -2,17 +2,60 @@ import { useEffect, useState } from "react";
 import { Session, createClient } from "@supabase/supabase-js";
 import { id, init, tx } from "@instantdb/react";
 
+import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/clerk-react";
+
+const CLERK_PUBLISHABLE_KEY =
+  "pk_test_d2VhbHRoeS1zZXJ2YWwtNjguY2xlcmsuYWNjb3VudHMuZGV2JA";
+
 function App() {
-  const { isLoading, session } = useSupabaseSession();
-  if (isLoading) {
-    return null;
-  }
-  if (!session) {
-    return <SupabaseLogin />;
-  }
-  return <AuthorizedApp />;
+  const page = window.location.pathname;
+  return (
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+      {page === "/afterSignIn" ? (
+        <SyncInstantWithClerk />
+      ) : (
+        <header>
+          <SignedOut>
+            <SignInButton redirectUrl="/afterSignIn" />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </header>
+      )}
+    </ClerkProvider>
+  );
 }
 
+function SyncInstantWithClerk() {
+  const { getToken } = useAuth();
+  useEffectOnce(async () => {
+    const clerkToken = await getToken();
+    if (!clerkToken) {
+      // TODO error here
+      return
+    };
+    const instantToken = await getInstantToken(clerkToken);
+    db.auth.signInWithToken(instantToken);
+  });
+  return <div>Hi!</div>;
+}
+
+function useEffectOnce(cb: () => void) {
+  const hasRun = React.useRef(false);
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+    cb();
+  }, []);
+}
 // --------
 // Instant Setup
 
@@ -58,13 +101,13 @@ async function getInstantUser() {
   return await db._core._reactor.getCurrentUser();
 }
 
-async function getInstantToken(session: Session) {
+async function getInstantToken(clerkToken: string) {
   const res = await fetch("http://localhost:3030/signin", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ supabaseAccessToken: session.access_token }),
+    body: JSON.stringify({ clerkToken }),
   });
   const json = await res.json();
   return json.instantToken;
@@ -142,24 +185,27 @@ function SupabaseLogin() {
 function AuthorizedApp() {
   const { isLoading, error, data } = db.useQuery({ files: {} });
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
   if (error) {
-    return <div>Error: {error.message}</div>
+    return <div>Error: {error.message}</div>;
   }
   return (
     <div className="h-full flex items-center justify-center">
       <div className="space-y-4">
         <div className="space-y-2">
           <h1 className="text-lg">Instant + Supabase</h1>
-          <h3 className="font-bold text-lg">Files (open another tab to see changes live)</h3>
+          <h3 className="font-bold text-lg">
+            Files (open another tab to see changes live)
+          </h3>
           <ul className="ml-2 list-disc">
             {data.files.map((file: any) => (
               <li key={file.id} className="flex space-between">
                 <span>{file.name}</span>
                 <button
                   className="ml-2"
-                  onClick={() => db.transact(tx.files[file.id].delete())}>
+                  onClick={() => db.transact(tx.files[file.id].delete())}
+                >
                   🗑️
                 </button>
               </li>
@@ -168,17 +214,21 @@ function AuthorizedApp() {
           <button
             className="block bg-gray-200 font-bold w-full p-2"
             onClick={() => {
-              db.transact(tx.files[id()].update({ name: "New File" }))
-            }}>
+              db.transact(tx.files[id()].update({ name: "New File" }));
+            }}
+          >
             Add a file!
           </button>
         </div>
         <button
           className="block bg-gray-200 font-bold w-full p-2"
-          onClick={() => supabase.auth.signOut()}>Sign out</button>
+          onClick={() => supabase.auth.signOut()}
+        >
+          Sign out
+        </button>
       </div>
     </div>
-  )
+  );
 }
 
 export default App;

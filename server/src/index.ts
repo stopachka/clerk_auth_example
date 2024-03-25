@@ -4,6 +4,10 @@ import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import { init } from "@instantdb/admin";
 
+
+const CLERK_PUBLISHABLE_KEY= "pk_test_d2VhbHRoeS1zZXJ2YWwtNjguY2xlcmsuYWNjb3VudHMuZGV2JA"
+const CLERK_SECRET_KEY = "sk_test_KMWciingaXl6ezxUiyoHDVsWMjpGzqpJUSwqFonVXM"; 
+
 // --------------
 // Set up Supabase
 
