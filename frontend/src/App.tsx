@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { Session, createClient } from "@supabase/supabase-js";
+import { useEffect, useRef } from "react";
+
 import { id, init, tx } from "@instantdb/react";
 
-import { ClerkProvider, useAuth } from "@clerk/clerk-react";
-
 import {
+  ClerkProvider,
+  useAuth,
   SignedIn,
   SignedOut,
   SignInButton,
@@ -17,7 +17,7 @@ const db = init({
   appId: "17dde164-c2d2-4c36-ab52-68b6507df371",
 });
 
-// ---- 
+// ----
 // Clerk Config
 
 const CLERK_PUBLISHABLE_KEY =
@@ -55,7 +55,7 @@ async function getInstantToken(clerkToken: string) {
   return json.instantToken;
 }
 
-// --- 
+// ---
 // 👇👇👇
 
 function SyncInstantWithClerk() {
@@ -79,7 +79,6 @@ function useEffectOnce(cb: () => void) {
     cb();
   }, []);
 }
-
 
 // -------------
 // Aalright, we are logged in! Here's a quick Instant update to show files.
